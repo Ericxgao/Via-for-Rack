@@ -1,6 +1,10 @@
 #include "sync.hpp"
 #include "via-module.hpp"
+#ifndef METAMODULE
 #include "osdialog.h"
+#else
+#include "async_filebrowser.hh"
+#endif
 
 #define SYNC_OVERSAMPLE_AMOUNT 8
 #define SYNC_OVERSAMPLE_QUALITY 6
@@ -361,7 +365,7 @@ struct Sync_Widget : ModuleWidget  {
         struct TableSetHandler : MenuItem {
             Sync *module; 
             void onAction(const event::Action &e) override {
-             
+                #ifndef METAMODULE
                 char* pathC = osdialog_file(OSDIALOG_OPEN, NULL, NULL, NULL); 
                 if (!pathC) { 
                     // Fail silently 
@@ -373,6 +377,7 @@ struct Sync_Widget : ModuleWidget  {
              
                 module->virtualModule.readTableSetFromFile(pathC);
                 module->tablePath = pathC;
+                #endif
             }
         };
 

@@ -108,7 +108,7 @@ struct Atsr : Via<ATSR_OVERSAMPLE_AMOUNT, ATSR_OVERSAMPLE_QUALITY> {
         lights[GREEN_LIGHT].setSmoothBrightness(virtualModule.greenLevelOut/4095.0, ledDecay);
         lights[BLUE_LIGHT].setSmoothBrightness(virtualModule.blueLevelOut/4095.0, ledDecay);
 
-        float output = outputs[MAIN_OUTPUT].value/8.0;
+        float output = outputs[MAIN_OUTPUT].getVoltage()/8.0;
         lights[OUTPUT_RED_LIGHT].setSmoothBrightness(clamp(-output, 0.0, 1.0), ledDecay);
         lights[OUTPUT_GREEN_LIGHT].setSmoothBrightness(clamp(output, 0.0, 1.0), ledDecay);
 

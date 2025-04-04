@@ -1,6 +1,10 @@
 #include "gateseq.hpp"
 #include "via-module.hpp"
+#ifndef METAMODULE
 #include "osdialog.h"
+#else
+#include "async_filebrowser.hh"
+#endif
 
 #define GATESEQ_OVERSAMPLE_AMOUNT 1
 #define GATESEQ_OVERSAMPLE_QUALITY 1
@@ -331,7 +335,7 @@ struct GateseqWidget : ModuleWidget  {
         struct ScaleSetHandler : MenuItem {
             Gateseq *module; 
             void onAction(const event::Action &e) override {
-             
+#ifndef METAMODULE
                 char* pathC = osdialog_file(OSDIALOG_OPEN, NULL, NULL, NULL); 
                 if (!pathC) { 
                     // Fail silently 
@@ -345,6 +349,21 @@ struct GateseqWidget : ModuleWidget  {
                 module->virtualModule.handleButton3ModeChange(module->virtualModule.gateseqUI.button3Mode);
                 module->virtualModule.handleButton6ModeChange(module->virtualModule.gateseqUI.button6Mode);
                 module->patternsPath = pathC;
+#else
+                async_osdialog_file(OSDIALOG_OPEN, NULL, NULL, NULL, [this](char *path) {
+                    if (!path) {
+                        // Fail silently
+                        return;
+                    }
+                    
+                    module->virtualModule.readPatternsFromFile(path);
+                    module->virtualModule.handleButton3ModeChange(module->virtualModule.gateseqUI.button3Mode);
+                    module->virtualModule.handleButton6ModeChange(module->virtualModule.gateseqUI.button6Mode);
+                    module->patternsPath = path;
+                    
+                    std::free(path);
+                });
+#endif
             }
         };
         ScaleSetHandler *menuItem = createMenuItem<ScaleSetHandler>("Select Bank Set File");

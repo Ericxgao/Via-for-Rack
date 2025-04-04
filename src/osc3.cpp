@@ -1,7 +1,11 @@
 #include "osc3.hpp"
 #include "via-module.hpp"
 #include "starling-dsp.hpp"
+#ifndef METAMODULE
 #include "osdialog.h"
+#else
+#include "async_filebrowser.hh"
+#endif
 
 #define OSC3_OVERSAMPLE_AMOUNT 32
 #define OSC3_OVERSAMPLE_QUALITY 6
@@ -205,9 +209,15 @@ struct Osc3 : Via<OSC3_OVERSAMPLE_AMOUNT, OSC3_OVERSAMPLE_AMOUNT> {
     float lastDac2Phase = 0;
     float lastDac3Phase = 0;
 
+    #ifndef METAMODULE
     dsp::MinBlepGenerator<8, 8, float> dac1MinBlep;
     dsp::MinBlepGenerator<8, 8, float> dac2MinBlep;
     dsp::MinBlepGenerator<8, 8, float> dac3MinBlep;
+    #else
+    dsp::MinBlepGenerator<16, 32, float> dac1MinBlep;
+    dsp::MinBlepGenerator<16, 32, float> dac2MinBlep;
+    dsp::MinBlepGenerator<16, 32, float> dac3MinBlep;
+    #endif
 
     PolyBlampGenerator<float> dac1PolyBlamp;
     PolyBlampGenerator<float> dac2PolyBlamp;
@@ -603,6 +613,7 @@ struct Osc3Widget : ModuleWidget  {
             Osc3 *module; 
             void onAction(const event::Action &e) override {
              
+#ifndef METAMODULE
                 char* pathC = osdialog_file(OSDIALOG_OPEN, NULL, NULL, NULL); 
                 if (!pathC) { 
                     // Fail silently 
@@ -614,6 +625,19 @@ struct Osc3Widget : ModuleWidget  {
              
                 module->virtualModule.readScalesFromFile(pathC);
                 module->scalePath = pathC;
+#else
+                async_osdialog_file(OSDIALOG_OPEN, NULL, NULL, NULL, [this](char *path) {
+                    if (!path) {
+                        // Fail silently
+                        return;
+                    }
+                    
+                    module->virtualModule.readScalesFromFile(path);
+                    module->scalePath = path;
+                    
+                    std::free(path);
+                });
+#endif
             }
         };
 

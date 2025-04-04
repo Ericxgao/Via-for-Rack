@@ -1,6 +1,10 @@
 #include "meta.hpp"
 #include "via-module.hpp"
+#ifndef METAMODULE
 #include "osdialog.h"
+#else
+#include "async_filebrowser.hh"
+#endif
 
 #define META_OVERSAMPLE_AMOUNT 8
 #define META_OVERSAMPLE_QUALITY 6
@@ -399,6 +403,7 @@ struct MetaWidget : ModuleWidget  {
             Meta *module; 
             void onAction(const event::Action &e) override {
              
+#ifndef METAMODULE
                 char* pathC = osdialog_file(OSDIALOG_OPEN, NULL, NULL, NULL); 
                 if (!pathC) { 
                     // Fail silently 
@@ -410,6 +415,19 @@ struct MetaWidget : ModuleWidget  {
              
                 module->virtualModule.readTableSetFromFile(pathC);
                 module->tablePath = pathC;
+#else
+                async_osdialog_file(OSDIALOG_OPEN, NULL, NULL, NULL, [this](char *path) {
+                    if (!path) {
+                        // Fail silently
+                        return;
+                    }
+                    
+                    module->virtualModule.readTableSetFromFile(path);
+                    module->tablePath = path;
+                    
+                    std::free(path);
+                });
+#endif
             }
         };
 
