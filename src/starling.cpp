@@ -15,6 +15,8 @@ void init(rack::Plugin *p) {
     p->addModel(modelOsc3);
     p->addModel(modelSync3);
     p->addModel(modelSync3XL);
+    #ifndef METAMODULE
     p->addModel(modelSync3XLLevels);
+    #endif
 
 }
